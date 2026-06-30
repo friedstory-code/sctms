@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- AUTH / USERS ----------
+
+enum Role {
+  ADMIN       // full system config, user management
+  MANAGER     // Training Manager / Production Manager - cross-area visibility, dashboard, certification sign-off
+  TRAINER     // schedules + delivers sessions, records attendance
+  SUPERVISOR  // manages own area's staff, enters assessments, builds training plans
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(SUPERVISOR)
+  productionArea ProductionArea? @relation(fields: [productionAreaId], references: [id])
+  productionAreaId String?
+  createdAt     DateTime  @default(now())
+
+  assessmentsGiven Assessment[] @relation("AssessorUser")
+  auditLogs        AuditLog[]
+}
+
+// ---------- CORE REFERENCE DATA ----------
+
+model ProductionArea {
+  id        String   @id @default(cuid())
+  code      String   @unique // EXT, IM, HP, MX, RG
+  name      String
+  operators Operator[]
+  programmes TrainingProgramme[]
+  users     User[]
+}
+
+model Domain {
+  id          String   @id @default(cuid())
+  code        String   @unique // D1..D8
+  name        String
+  description String?
+  isSafetyCritical Boolean @default(false) // D7 Safety
+
+  roleProfileTargets RoleProfileTarget[]
+  assessments        Assessment[]
+  certifications      Certification[]
+  trainingProgrammes TrainingProgramme[]
+}
+
+enum RoleProfile {
+  PO_ENTRY
+  PO
+  SPO
+  LO_TL
+  TRN
+}
+
+model RoleProfileTarget {
+  id             String      @id @default(cuid())
+  roleProfile    RoleProfile
+  domainId       String
+  domain         Domain      @relation(fields: [domainId], references: [id])
+  targetLevel    Int         // 0-4
+
+  @@unique([roleProfile, domainId])
+}
+
+// ---------- MODULE 1: SKILL MATRIX ----------
+
+model Operator {
+  id               String   @id @default(cuid())
+  fullName         String
+  employeeId       String   @unique
+  jobTitle         String
+  roleProfile      RoleProfile
+  productionAreaId String
+  productionArea   ProductionArea @relation(fields: [productionAreaId], references: [id])
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  assessments      Assessment[]
+  certifications   Certification[]
+  trainingPlans    TrainingPlan[]
+  enrollments      SessionEnrollment[]
+}
+
+model Assessment {
+  id            String   @id @default(cuid())
+  operatorId    String
+  operator      Operator @relation(fields: [operatorId], references: [id])
+  domainId      String
+  domain        Domain   @relation(fields: [domainId], references: [id])
+  level         Int      // 0-4, latest level for this operator+domain is the "current" one (most recent by date)
+  assessmentDate DateTime
+  assessorUserId String
+  assessor      User     @relation("AssessorUser", fields: [assessorUserId], references: [id])
+  notes         String?
+  recordFormUrl String?  // link to uploaded signed Assessment Record Form
+  createdAt     DateTime @default(now())
+
+  @@index([operatorId, domainId, assessmentDate])
+}
+
+// ---------- MODULE 2: TRAINING MATRIX ----------
+
+enum DeliveryMethod {
+  CLASSROOM
+  WORKSHOP
+  OJT
+}
+
+enum RefreshFrequency {
+  NONE
+  ANNUAL
+  BIENNIAL
+  TRIENNIAL
+}
+
+model TrainingProgramme {
+  id               String   @id @default(cuid())
+  code             String   @unique // e.g. EXT_D7
+  name             String
+  productionAreaId String
+  productionArea   ProductionArea @relation(fields: [productionAreaId], references: [id])
+  domainId         String
+  domain           Domain   @relation(fields: [domainId], references: [id])
+  deliveryMethod   DeliveryMethod
+  levelFrom        Int
+  levelTo          Int
+  refreshFrequency RefreshFrequency @default(NONE)
+  deckFileUrl      String?  // uploaded PPTX
+  planItems        TrainingPlanItem[]
+  sessions         TrainingSession[]
+}
+
+// ---------- MODULE 3: TRAINING PLANS ----------
+
+enum PlanItemStatus {
+  PLANNED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  ASSESSED
+}
+
+model TrainingPlan {
+  id          String   @id @default(cuid())
+  operatorId  String
+  operator    Operator @relation(fields: [operatorId], references: [id])
+  isOnboarding Boolean @default(false)
+  createdAt   DateTime @default(now())
+  items       TrainingPlanItem[]
+}
+
+model TrainingPlanItem {
+  id              String   @id @default(cuid())
+  trainingPlanId  String
+  trainingPlan    TrainingPlan @relation(fields: [trainingPlanId], references: [id])
+  programmeId     String
+  programme       TrainingProgramme @relation(fields: [programmeId], references: [id])
+  targetDate      DateTime?
+  coachUserId     String?
+  status          PlanItemStatus @default(PLANNED)
+  sessionEnrollment SessionEnrollment?
+}
+
+// ---------- MODULE 5: TRAINING CALENDAR ----------
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model TrainingSession {
+  id            String   @id @default(cuid())
+  programmeId   String
+  programme     TrainingProgramme @relation(fields: [programmeId], references: [id])
+  date          DateTime
+  deliveryFormat DeliveryMethod
+  trainerUserId String
+  location      String?
+  status        SessionStatus @default(SCHEDULED)
+  enrollments   SessionEnrollment[]
+}
+
+enum AttendanceStatus {
+  ENROLLED
+  ATTENDED
+  DID_NOT_ATTEND
+}
+
+model SessionEnrollment {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         TrainingSession @relation(fields: [sessionId], references: [id])
+  operatorId      String
+  operator        Operator @relation(fields: [operatorId], references: [id])
+  trainingPlanItemId String? @unique
+  trainingPlanItem TrainingPlanItem? @relation(fields: [trainingPlanItemId], references: [id])
+  attendance      AttendanceStatus @default(ENROLLED)
+  quizScore       Int?
+  signOffSheetUrl String?
+
+  @@unique([sessionId, operatorId])
+}
+
+// ---------- MODULE 4: CERTIFICATION & COMPLIANCE ----------
+
+enum CertStatus {
+  CURRENT
+  EXPIRING_SOON
+  EXPIRED
+  RECERT_REQUIRED
+}
+
+model Certification {
+  id              String   @id @default(cuid())
+  operatorId      String
+  operator        Operator @relation(fields: [operatorId], references: [id])
+  domainId        String
+  domain          Domain   @relation(fields: [domainId], references: [id])
+  levelConfirmed  Int
+  assessmentDate  DateTime
+  assessorName    String
+  expiryDate      DateTime?
+  recordFormUrl   String?
+  status          CertStatus @default(CURRENT)
+  createdAt       DateTime @default(now())
+}
+
+// ---------- AUDIT ----------
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  details   Json?
+  createdAt DateTime @default(now())
+}
