@@ -1,7 +1,10 @@
 import { PrismaClient, RoleProfile } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+});
 
 const AREAS = [
   { code: "EXT", name: "Extrusion" },
