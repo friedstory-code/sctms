@@ -2,7 +2,7 @@ import { signIn } from "@/lib/auth";
 
 export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, var(--brand-900), var(--brand-700))" }}>
       <form
         action={async (formData) => {
           "use server";
@@ -12,18 +12,22 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
             redirectTo: "/skill-matrix",
           });
         }}
-        className="bg-white border rounded-lg p-8 w-full max-w-sm space-y-4"
+        className="sc-card w-full max-w-sm p-8 space-y-4 shadow-xl"
       >
         <div>
-          <h1 className="text-xl font-semibold">SCTMS</h1>
-          <p className="text-sm text-gray-500">Shopfloor Competency & Training Management</p>
+          <h1 className="text-xl sc-page-title">SCTMS</h1>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Shopfloor Competency &amp; Training Management
+          </p>
         </div>
         {searchParams?.error && (
-          <p className="text-sm text-red-600">Invalid email or password.</p>
+          <p className="text-sm" style={{ color: "var(--status-red-text)" }}>
+            Invalid email or password.
+          </p>
         )}
-        <input name="email" type="email" placeholder="Email" required className="w-full border rounded px-3 py-2 text-sm" />
-        <input name="password" type="password" placeholder="Password" required className="w-full border rounded px-3 py-2 text-sm" />
-        <button type="submit" className="w-full bg-black text-white rounded py-2 text-sm">
+        <input name="email" type="email" placeholder="Email" required className="sc-input" />
+        <input name="password" type="password" placeholder="Password" required className="sc-input" />
+        <button type="submit" className="sc-btn-primary w-full">
           Sign in
         </button>
       </form>

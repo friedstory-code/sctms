@@ -1,8 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette: deep industrial blue + crisp white, slate for text/structure */
+  --background: #f4f7fb;        /* soft blue-white page background */
+  --surface: #ffffff;           /* card/panel surface */
+  --foreground: #0f172a;        /* primary text - slate-900 */
+  --muted: #5b6b85;             /* secondary text */
+  --border: #dbe3ef;            /* hairline borders */
+
+  --brand-900: #0a2452;         /* deepest navy - headers, active nav */
+  --brand-700: #123a7a;         /* nav bar */
+  --brand-600: #1d4ed8;         /* primary action blue */
+  --brand-500: #2563eb;         /* hover / links */
+  --brand-100: #e8eefc;         /* light blue tint - selected states, chips */
+  --brand-50: #f3f7ff;          /* faint blue wash for table stripes */
+
+  /* Functional status colors - kept distinct from the brand blue on purpose,
+     these encode real competency/compliance meaning, not decoration */
+  --status-green-bg: #ecfdf3;
+  --status-green-text: #027a48;
+  --status-green-border: #abefc6;
+  --status-amber-bg: #fffaeb;
+  --status-amber-text: #b54708;
+  --status-amber-border: #fedf89;
+  --status-red-bg: #fef3f2;
+  --status-red-text: #b42318;
+  --status-red-border: #fda29b;
+  --status-grey-bg: #f8fafc;
+  --status-grey-text: #667085;
+  --status-grey-border: #e4e7ec;
 }
 
 @theme inline {
@@ -12,15 +38,105 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* ---------- shared component classes ---------- */
+
+.sc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.sc-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--foreground);
+}
+.sc-input:focus {
+  outline: 2px solid var(--brand-500);
+  outline-offset: -1px;
+  border-color: var(--brand-500);
+}
+
+.sc-btn-primary {
+  background: var(--brand-600);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+  transition: background 0.15s ease;
+}
+.sc-btn-primary:hover {
+  background: var(--brand-500);
+}
+
+.sc-btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+}
+.sc-btn-secondary:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-500);
+}
+
+.sc-table th {
+  background: var(--brand-900);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+}
+.sc-table td {
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+.sc-table tr:nth-child(even) td {
+  background: var(--brand-50);
+}
+
+.sc-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid;
+  padding: 0.15rem 0.5rem;
+}
+.sc-badge-green { background: var(--status-green-bg); color: var(--status-green-text); border-color: var(--status-green-border); }
+.sc-badge-amber { background: var(--status-amber-bg); color: var(--status-amber-text); border-color: var(--status-amber-border); }
+.sc-badge-red   { background: var(--status-red-bg);   color: var(--status-red-text);   border-color: var(--status-red-border); }
+.sc-badge-grey  { background: var(--status-grey-bg);  color: var(--status-grey-text);  border-color: var(--status-grey-border); }
+
+.sc-page-title {
+  color: var(--brand-900);
+  font-weight: 700;
+}
+
+.sc-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-600);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
 }

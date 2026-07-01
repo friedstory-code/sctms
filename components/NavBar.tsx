@@ -6,9 +6,9 @@ const LINKS = [
   { href: "/training-matrix", label: "Training Matrix" },
   { href: "/training-plans", label: "Training Plans" },
   { href: "/certification", label: "Certification" },
-  { href: "/training-calendar", label: "Training Calendar" },
-  { href: "/progress-monitoring", label: "Progress Monitoring" },
-  { href: "/executive-dashboard", label: "Executive Dashboard" },
+  { href: "/training-calendar", label: "Calendar" },
+  { href: "/progress-monitoring", label: "Progress" },
+  { href: "/executive-dashboard", label: "Dashboard" },
 ];
 
 export default async function NavBar() {
@@ -16,19 +16,25 @@ export default async function NavBar() {
   if (!session?.user) return null;
 
   return (
-    <nav className="border-b bg-white px-6 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-6 overflow-x-auto">
-        <span className="font-semibold whitespace-nowrap">SCTMS</span>
+    <nav style={{ background: "var(--brand-700)" }} className="px-6 py-0 flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-1 overflow-x-auto">
+        <span className="font-bold text-white text-base whitespace-nowrap pr-6 py-4 tracking-tight">
+          SCTMS
+        </span>
         {LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-black whitespace-nowrap">
+          <Link
+            key={l.href}
+            href={l.href}
+            className="text-sm text-blue-100 hover:text-white hover:bg-white/10 whitespace-nowrap px-3 py-4 transition-colors"
+          >
             {l.label}
           </Link>
         ))}
       </div>
-      <div className="flex items-center gap-3 text-sm text-gray-500 whitespace-nowrap">
-        <span>{session.user.name} · {(session.user as any).role}</span>
+      <div className="flex items-center gap-3 text-sm text-blue-100 whitespace-nowrap pl-4">
+        <span>{session.user.name} <span className="text-blue-300">· {(session.user as any).role}</span></span>
         <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-          <button className="underline">Sign out</button>
+          <button className="text-blue-200 hover:text-white underline underline-offset-2">Sign out</button>
         </form>
       </div>
     </nav>
