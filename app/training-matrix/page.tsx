@@ -1,10 +1,12 @@
 import { auth } from "@/lib/auth";
 import { getTrainingProgrammes, updateProgramme } from "./actions";
+import MaterialUpload from "@/components/MaterialUpload";
 
 export default async function TrainingMatrixPage() {
   const session = await auth();
   const role = (session?.user as any)?.role;
   const canEdit = ["ADMIN", "MANAGER"].includes(role);
+  const canUpload = ["ADMIN", "MANAGER", "TRAINER"].includes(role);
 
   const programmes = await getTrainingProgrammes();
 
@@ -13,8 +15,7 @@ export default async function TrainingMatrixPage() {
       <div>
         <h1 className="text-2xl sc-page-title">Training Matrix</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Defines, per production area and domain, how training is delivered: method, target level
-          range, and refresh cadence. This is the catalogue Training Plans draw from.
+          Defines how training is delivered per domain. Upload the corresponding PPTX training deck or PDF for each programme.
         </p>
       </div>
 
@@ -28,6 +29,7 @@ export default async function TrainingMatrixPage() {
               <th>Delivery</th>
               <th>Level range</th>
               <th>Refresh</th>
+              <th>Training material</th>
               {canEdit && <th>Update</th>}
             </tr>
           </thead>
@@ -40,6 +42,15 @@ export default async function TrainingMatrixPage() {
                 <td>{p.deliveryMethod}</td>
                 <td>L{p.levelFrom} → L{p.levelTo}</td>
                 <td>{p.refreshFrequency}</td>
+                <td>
+                  {canUpload
+                    ? <MaterialUpload programmeId={p.id} programmeCode={p.code} currentUrl={p.deckFileUrl} />
+                    : p.deckFileUrl
+                      ? <a href={p.deckFileUrl} target="_blank" rel="noopener noreferrer"
+                          className="text-xs underline" style={{ color: "var(--brand-600)" }}>View</a>
+                      : <span className="text-xs" style={{ color: "var(--muted)" }}>—</span>
+                  }
+                </td>
                 {canEdit && (
                   <td>
                     <form action={updateProgramme} className="flex flex-wrap items-center gap-2">
@@ -50,10 +61,11 @@ export default async function TrainingMatrixPage() {
                         <option value="OJT">OJT</option>
                       </select>
                       <select name="levelFrom" defaultValue={p.levelFrom} className="sc-input !w-16 text-xs py-1">
-                        {[0, 1, 2, 3, 4].map((l) => <option key={l} value={l}>L{l}</option>)}
+                        {[0,1,2,3,4].map((l) => <option key={l} value={l}>L{l}</option>)}
                       </select>
+                      <span className="text-xs" style={{ color: "var(--muted)" }}>→</span>
                       <select name="levelTo" defaultValue={p.levelTo} className="sc-input !w-16 text-xs py-1">
-                        {[0, 1, 2, 3, 4].map((l) => <option key={l} value={l}>L{l}</option>)}
+                        {[0,1,2,3,4].map((l) => <option key={l} value={l}>L{l}</option>)}
                       </select>
                       <select name="refreshFrequency" defaultValue={p.refreshFrequency} className="sc-input !w-auto text-xs py-1">
                         <option value="NONE">None</option>

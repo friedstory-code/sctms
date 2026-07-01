@@ -247,3 +247,11 @@ model AuditLog {
   details   Json?
   createdAt DateTime @default(now())
 }
+
+// ---------- SITE SETTINGS ----------
+
+model SiteSetting {
+  key       String   @id  // e.g. "logoUrl", "companyName"
+  value     String
+  updatedAt DateTime @updatedAt
+}
